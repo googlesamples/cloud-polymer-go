@@ -1,0 +1,66 @@
+<!--
+Copyright 2015 Google Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http:#www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to writing, software distributed
+under the License is distributed on a "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.
+
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!--
+A list of posts should look like this:
+
+ {
+   "uid": "1",
+   "text": "Go is awesome!",
+   "username": "Gopher",
+   "avatar": "http://gophergala.com/assets/img/xfancy_gopher_renee.jpg.pagespeed.ic.jy4Ho-AVDI.jpg",
+   "favorite": true
+  },
+  {
+   "uid": "2",
+   "text": "And polymer is not bad",
+   "username": "Gopher",
+   "avatar": "http://gophergala.com/assets/img/xfancy_gopher_renee.jpg.pagespeed.ic.jy4Ho-AVDI.jpg",
+   "favorite": false
+  }
+-->
+<link rel="import" href="https://www.polymer-project.org/0.5/components/polymer/polymer.html">
+<link rel="import" href="https://www.polymer-project.org/0.5/components/google-apis/google-apis.html">
+<polymer-element name="post-service" attributes="posts">
+    <template>
+        <google-api-loader id="api" name="posts" version="v1" appId="polymer-gopher" root="http://localhost:8080/_ah/api">
+        </google-api-loader>
+    </template>
+    <script>
+    Polymer('post-service', {
+        ready: function() {
+            var setPosts = (function(data) {
+                this.posts = data.result.posts;
+            }).bind(this);
+
+            this.$.api.addEventListener('google-api-load', (function() {
+                this.api = this.$.api.api;
+                this.api.getPosts().then(setPosts);
+            }).bind(this));
+        },
+        addPost: function(post) {
+            return this.api.addPost(post).then((function(data) {
+                this.posts.unshift(data.result);
+            }).bind(this));
+        },
+        setFavorite: function(uid, favorite) {
+            this.api.setFavorite({
+                uid: uid,
+                favorite: favorite
+            }).execute();
+        }
+    });
+    </script>
+</polymer-element>

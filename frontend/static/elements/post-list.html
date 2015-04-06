@@ -1,0 +1,71 @@
+<!--
+Copyright 2015 Google Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http:#www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to writing, software distributed
+under the License is distributed on a "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.
+
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<link rel="import" href="https://www.polymer-project.org/0.5/components/polymer/polymer.html">
+<link rel="import" href="https://www.polymer-project.org/0.5/components/paper-fab/paper-fab.html">
+<link rel="import" href="/elements/post-service.html">
+<link rel="import" href="/elements/post-card.html">
+<link rel="import" href="/elements/post-form.html">
+<polymer-element name="post-list" attributes="show">
+    <template>
+        <style>
+        :host {
+            display: block;
+            width: 100%;
+        }
+
+        post-card {
+            margin-bottom: 30px;
+        }
+
+        paper-fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+        }
+
+        img {
+            width: 70px;
+            height: 70px;
+        }
+        </style>
+        <post-service id="service" posts="{{posts}}"></post-service>
+        <div layout vertical center>
+            <template repeat="{{post in posts}}">
+                <post-card favorite="{{post.favorite}}" on-favorite-tap="{{handleFavorite}}" hidden?="{{show == 'favorites' && !post.favorite}}">
+                    <img src="{{post.avatar}}">
+                    <h2>{{post.username}}</h2>
+                    <p>{{post.text}}</p>
+                </post-card>
+            </template>
+        </div>
+        <paper-fab icon="add" on-tap="{{openForm}}"></paper-fab>
+        <post-form id="postForm" tasks="{{posts}}" service="{{service}}"></post-form>
+    </template>
+    <script>
+    Polymer({
+        handleFavorite: function(event, detail, sender) {
+            var post = sender.templateInstance.model.post;
+            this.$.service.setFavorite(post.uid, post.favorite);
+        },
+        ready: function() {
+            this.service = this.$.service;
+        },
+        openForm: function() {
+            this.$.postForm.toggle();
+        }
+    });
+    </script>
+</polymer-element>
