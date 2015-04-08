@@ -12,7 +12,7 @@ two [App Engine modules](2):
 To run this application locally install the [Go App Engine SDK](7) and then execute:
 
 ```
-$ goapp serve dispatch.yaml frontend/app.yaml backend/step6/app.yaml
+$ goapp serve dispatch.yaml frontend/app.yaml backend/app.yaml
 ```
 
 ## Deploying the app on the cloud
@@ -30,7 +30,7 @@ And to deploy it:
 - Then execute
 
 ```
-$ goapp deploy backend/step6/app.yaml
+$ goapp deploy backend/app.yaml
 $ goapp deploy frontend/app.yaml
 $ appcfg.py update_dispatch .
 ```
