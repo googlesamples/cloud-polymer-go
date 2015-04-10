@@ -1,15 +1,15 @@
 Polymer Gopher
 ==============
 
-This project is a sample web application hosted on [App Engine](1) composed of
-two [App Engine modules](2):
+This project is a sample web application hosted on [App Engine][1] composed of
+two [App Engine modules][2]:
 
-- a frontend written using [Polymer](3)
-- a backend written in [Go](4)
+- a frontend written using [Polymer][3]
+- a backend written in [Go][4]
 
 ## Running locally
 
-To run this application locally install the [Go App Engine SDK](7) and then execute:
+To run this application locally install the [Go App Engine SDK][7] and then execute:
 
 ```
 $ goapp serve dispatch.yaml frontend/app.yaml backend/app.yaml
@@ -19,7 +19,7 @@ $ goapp serve dispatch.yaml frontend/app.yaml backend/app.yaml
 
 And to deploy it:
 
-- Create a new Google Cloud project on the [Google Cloud Console](8)
+- Create a new Google Cloud project on the [Google Cloud Console][8]
 
 - Write your project id in every single `yaml` file:
 
@@ -43,7 +43,7 @@ running on the cloud.
 [3]: https://www.polymer-project.org
 [4]: https://golang.org
 [7]: https://cloud.google.com/appengine/downloads
-[9]: https://console.developers.google.com
+[8]: https://console.developers.google.com
 
 
 ### Disclaimer
