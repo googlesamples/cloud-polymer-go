@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package posts
+// Package backend exposes a REST API to manage posts stored in the Google
+// Cloud Datastore using the Cloud Endpoints feature of App Engine.
+package backend
 
 import (
 	"log"
+	"net/url"
 
 	"appengine"
 	"appengine/datastore"
@@ -23,8 +26,10 @@ import (
 	"github.com/GoogleCloudPlatform/go-endpoints/endpoints"
 )
 
+// PostsAPI defines all the endpoints of the posts API.
 type PostsAPI struct{}
 
+// A Post contains all the information related to a post.
 type Post struct {
 	UID      *datastore.Key `json:"uid" datastore:"-"`
 	Text     string         `json:"text"`
@@ -33,11 +38,18 @@ type Post struct {
 	Favorite bool           `json:"favorite"`
 }
 
+// Posts contains a slice of posts. This type is needed because go-endpoints
+// only supports pointers to structs as input and output types.
 type Posts struct {
 	Posts []Post `json:"posts"`
 }
 
+// List returns a list of all the existing posts.
 func (PostsAPI) List(c endpoints.Context) (*Posts, error) {
+	if err := checkReferer(c); err != nil {
+		return nil, err
+	}
+
 	posts := []Post{}
 	keys, err := datastore.NewQuery("Post").GetAll(c, &posts)
 	if err != nil {
@@ -49,13 +61,20 @@ func (PostsAPI) List(c endpoints.Context) (*Posts, error) {
 	return &Posts{posts}, nil
 }
 
+// AddRequest contains all the fields needed to create a new Post.
 type AddRequest struct {
 	Text     string
 	Username string
 	Avatar   string
 }
 
+// Add creates a new post given the fields in AddRequest, stores it in the
+// datastore, and returns it.
 func (PostsAPI) Add(c endpoints.Context, r *AddRequest) (*Post, error) {
+	if err := checkReferer(c); err != nil {
+		return nil, err
+	}
+
 	k := datastore.NewIncompleteKey(c, "Post", nil)
 	t := &Post{Text: r.Text, Username: r.Username, Avatar: r.Avatar}
 	k, err := datastore.Put(c, k, t)
@@ -66,12 +85,19 @@ func (PostsAPI) Add(c endpoints.Context, r *AddRequest) (*Post, error) {
 	return t, nil
 }
 
+// SetFavoriteRequest contains the information needed to change the favorite
+// status of a post.
 type SetFavoriteRequest struct {
 	UID      *datastore.Key
 	Favorite bool
 }
 
+// SetFavorite changes the favorite status of a post given its UID.
 func (PostsAPI) SetFavorite(c endpoints.Context, r *SetFavoriteRequest) error {
+	if err := checkReferer(c); err != nil {
+		return err
+	}
+
 	return datastore.RunInTransaction(c, func(c appengine.Context) error {
 		var p Post
 		if err := datastore.Get(c, r.UID, &p); err == datastore.ErrNoSuchEntity {
@@ -85,13 +111,39 @@ func (PostsAPI) SetFavorite(c endpoints.Context, r *SetFavoriteRequest) error {
 	}, nil)
 }
 
+// checkReferer returns an error if the referer of the HTTP request in the
+// given context is not allowed.
+//
+// The allowed referer is the appspot domain for the application, such as:
+//   my-project-id.appspot.com
+// and all domains are accepted when running locally on dev app server.
+func checkReferer(c endpoints.Context) error {
+	if appengine.IsDevAppServer() {
+		return nil
+	}
+
+	r := c.HTTPRequest().Referer()
+	u, err := url.Parse(r)
+	if err != nil {
+		c.Infof("malformed referer detected: %q", r)
+		return endpoints.NewUnauthorizedError("couldn't extract domain from referer")
+	}
+
+	if u.Host != appengine.AppID(c)+".appspot.com" {
+		c.Infof("unauthorized referer detected: %q", r)
+		return endpoints.NewUnauthorizedError("referer unauthorized")
+	}
+	return nil
+}
+
 func init() {
+	// register the posts API with cloud endpoints.
 	api, err := endpoints.RegisterService(PostsAPI{}, "posts", "v1", "posts api", true)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println(api.MethodByName("List"))
+	// adapt the name, method, and path for each method.
 	info := api.MethodByName("List").Info()
 	info.Name, info.HTTPMethod, info.Path = "getPosts", "GET", "posts"
 
@@ -101,5 +153,6 @@ func init() {
 	info = api.MethodByName("Add").Info()
 	info.Name, info.HTTPMethod, info.Path = "addPost", "POST", "posts"
 
+	// start handling cloud endpoint requests.
 	endpoints.HandleHTTP()
 }

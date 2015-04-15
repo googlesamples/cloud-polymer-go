@@ -38,13 +38,15 @@ $ appcfg.py update_dispatch .
 Then visiting http://your-project-id.appspot.com should show you the application
 running on the cloud.
 
+The documentation generated for the Go backend is available on [godoc.org](10).
+
 [1]: https://cloud.google.com/appengine/docs
 [2]: https://cloud.google.com/appengine/docs/go/modules
 [3]: https://www.polymer-project.org
 [4]: https://golang.org
 [7]: https://cloud.google.com/appengine/downloads
 [9]: https://console.developers.google.com
-
+[10]: http://godoc.org/github.com/googlesamples/cloud-polymer-go/backend
 
 ### Disclaimer
 
