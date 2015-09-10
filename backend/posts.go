@@ -17,11 +17,13 @@
 package backend
 
 import (
-	"log"
 	"net/url"
 
-	"appengine"
-	"appengine/datastore"
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
+
+	"golang.org/x/net/context"
 
 	"github.com/GoogleCloudPlatform/go-endpoints/endpoints"
 )
@@ -45,7 +47,7 @@ type Posts struct {
 }
 
 // List returns a list of all the existing posts.
-func (PostsAPI) List(c endpoints.Context) (*Posts, error) {
+func (PostsAPI) List(c context.Context) (*Posts, error) {
 	if err := checkReferer(c); err != nil {
 		return nil, err
 	}
@@ -70,7 +72,7 @@ type AddRequest struct {
 
 // Add creates a new post given the fields in AddRequest, stores it in the
 // datastore, and returns it.
-func (PostsAPI) Add(c endpoints.Context, r *AddRequest) (*Post, error) {
+func (PostsAPI) Add(c context.Context, r *AddRequest) (*Post, error) {
 	if err := checkReferer(c); err != nil {
 		return nil, err
 	}
@@ -93,12 +95,12 @@ type SetFavoriteRequest struct {
 }
 
 // SetFavorite changes the favorite status of a post given its UID.
-func (PostsAPI) SetFavorite(c endpoints.Context, r *SetFavoriteRequest) error {
+func (PostsAPI) SetFavorite(c context.Context, r *SetFavoriteRequest) error {
 	if err := checkReferer(c); err != nil {
 		return err
 	}
 
-	return datastore.RunInTransaction(c, func(c appengine.Context) error {
+	return datastore.RunInTransaction(c, func(c context.Context) error {
 		var p Post
 		if err := datastore.Get(c, r.UID, &p); err == datastore.ErrNoSuchEntity {
 			return endpoints.NewNotFoundError("post not found")
@@ -117,20 +119,20 @@ func (PostsAPI) SetFavorite(c endpoints.Context, r *SetFavoriteRequest) error {
 // The allowed referer is the appspot domain for the application, such as:
 //   my-project-id.appspot.com
 // and all domains are accepted when running locally on dev app server.
-func checkReferer(c endpoints.Context) error {
+func checkReferer(c context.Context) error {
 	if appengine.IsDevAppServer() {
 		return nil
 	}
 
-	r := c.HTTPRequest().Referer()
+	r := endpoints.HTTPRequest(c).Referer()
 	u, err := url.Parse(r)
 	if err != nil {
-		c.Infof("malformed referer detected: %q", r)
+		log.Infof(c, "malformed referer detected: %q", r)
 		return endpoints.NewUnauthorizedError("couldn't extract domain from referer")
 	}
 
 	if u.Host != appengine.AppID(c)+".appspot.com" {
-		c.Infof("unauthorized referer detected: %q", r)
+		log.Infof(c, "unauthorized referer detected: %q", r)
 		return endpoints.NewUnauthorizedError("referer unauthorized")
 	}
 	return nil
@@ -140,7 +142,7 @@ func init() {
 	// register the posts API with cloud endpoints.
 	api, err := endpoints.RegisterService(PostsAPI{}, "posts", "v1", "posts api", true)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	// adapt the name, method, and path for each method.
