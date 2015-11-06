@@ -11,8 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-application: polymer-gopher
-
 dispatch:
   - url: "*/_ah/spi/*"
     module: default
