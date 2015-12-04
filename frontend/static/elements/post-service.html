@@ -31,11 +31,11 @@ A list of posts should look like this:
    "favorite": false
   }
 -->
-<link rel="import" href="https://www.polymer-project.org/0.5/components/polymer/polymer.html">
-<link rel="import" href="https://www.polymer-project.org/0.5/components/google-apis/google-apis.html">
+<link rel="import" href="https://www.polymer-project.org/1.0/components/polymer/polymer.html">
+<link rel="import" href="https://www.polymer-project.org/1.0/components/google-apis/google-apis.html">
 <polymer-element name="post-service" attributes="posts">
     <template>
-        <google-api-loader id="api" name="posts" version="v1" appId="polymer-gopher" root="http://localhost:8080/_ah/api">
+        <google-api-loader id="api" name="posts" version="v1" appId="polymer-gopher">
         </google-api-loader>
     </template>
     <script>
@@ -44,6 +44,11 @@ A list of posts should look like this:
             var setPosts = (function(data) {
                 this.posts = data.result.posts;
             }).bind(this);
+
+            // if running on localhost use the localhost endpoint.
+            if (window.location.hostname == "localhost" ||
+                window.location.hostname == "127.0.0.1")
+              this.$.api.root = "http://localhost:8080/_ah/api";
 
             this.$.api.addEventListener('google-api-load', (function() {
                 this.api = this.$.api.api;
