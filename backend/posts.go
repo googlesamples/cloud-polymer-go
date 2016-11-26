@@ -65,9 +65,9 @@ func (PostsAPI) List(c context.Context) (*Posts, error) {
 
 // AddRequest contains all the fields needed to create a new Post.
 type AddRequest struct {
-	Text     string
-	Username string
-	Avatar   string
+	Text     string `json:"text"`
+	Username string `json:"username"`
+	Avatar   string `json:"avatar"`
 }
 
 // Add creates a new post given the fields in AddRequest, stores it in the
